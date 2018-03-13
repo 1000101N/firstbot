@@ -10,6 +10,9 @@ com\nbabiy\bot\BotData.class
 com\nbabiy\domain\Drink.class
 com\nbabiy\bot\PizzaBot.class
 com\nbabiy\bot\BotProducer.class
+com\nbabiy\bot\Botable.class
+com\nbabiy\db\DrinkBean.class
 com\nbabiy\domain\Item.class
 com\nbabiy\Main.class
+com\nbabiy\db\PizzaBean.class
 com\nbabiy\domain\CategoryOfFood.class

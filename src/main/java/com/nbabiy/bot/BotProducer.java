@@ -10,9 +10,5 @@ public class BotProducer {
     @Produces @BotData
     private boolean start = false;
 
-    @Produces @BotData
-    private PizzaBot pizzaBot = new PizzaBot();
 
-    @Produces @BotData
-    private TelegramBotsApi botsApi = new TelegramBotsApi();
 }

@@ -1,5 +1,7 @@
 package com.nbabiy.bot;
 
+import com.nbabiy.db.DrinkBean;
+import com.nbabiy.db.PizzaBean;
 import com.nbabiy.domain.*;
 import org.telegram.telegrambots.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -11,14 +13,20 @@ import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.generics.BotOptions;
+import org.telegram.telegrambots.generics.BotSession;
+import org.telegram.telegrambots.generics.LongPollingBot;
 
+import javax.ejb.Startup;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.*;
 
 
 public class PizzaBot extends TelegramLongPollingBot {
 
-    private ArrayList<Pizza> pizzas;
-    private ArrayList<Drink> drinks;
+    private List<Pizza> pizzas;
+    private List<Drink> drinks;
 
     private boolean order_menu = false;
 
@@ -66,26 +74,37 @@ public class PizzaBot extends TelegramLongPollingBot {
 
     private HashMap<Long, Order> orders;
 
+    private DrinkBean drinkBean;
+
+    private PizzaBean pizzaBean;
 
     public PizzaBot() {
-        initData();
     }
 
-    private void initData() {
+    public void initData() {
         orders = new HashMap<>();
-        pizzas = new ArrayList<>();
+        drinkBean = new DrinkBean();
+        pizzaBean = new PizzaBean();
 
-        pizzas.add(new Pizza("Піца Барбекю", "Соус / Сир Королівський / Салямі / Цибуля / Перець чілі / Кукурудза / \n 35 см, 565 гр.", 110f, true, "http://pizza-if.com/wp-content/uploads/Безіменний.png"));
-        pizzas.add(new Pizza("Капрічіоза Класік", "Соус / Сир Королівський / Шинка / Печериці / Орегано / Італійські оливки / \n 35 см, 555 гр.", 118f, true, "http://pizza-if.com/wp-content/uploads/Капрічіоза-класссік.png"));
-        pizzas.add(new Pizza("П’ять сирів", "Соус / Сир Королівський / Сир Моцарелла / Сир Пармезан / Сир Фета / Сир Горгонзола / \n 35 см, 535 гр", 145f, true, "http://pizza-if.com/wp-content/uploads/5-2.png"));
-        pizzas.add(new Pizza("Піца Ібіца", "Соус / Сир Королівський / Курка / Креветки / Кукурудза / Орегано / Соус Песто / \n 35 см, 580 гр.", 169f, true, "http://pizza-if.com/wp-content/uploads/5-3.png"));
+        if (pizzaBean != null) {
+            pizzas = pizzaBean.getAllPizza();
 
-        drinks = new ArrayList<>();
-
-        drinks.add(new Drink("Мохіто (Власного приготування)", 17f, true, "http://pizza-if.com/wp-content/uploads/0022_mojito-png.png", 0.5f));
-        drinks.add(new Drink("Сік яблучний", 23f, true, "http://pizza-if.com/wp-content/uploads/Без-имени-1-1.png", 0.3f));
-        drinks.add(new Drink("Pepsi", 21f, true, "http://pizza-if.com/wp-content/uploads/44444.png", 1f));
-        drinks.add(new Drink("Sandora ананасовий сік", 35, true, "http://pizza-if.com/wp-content/uploads/0005.png", 1f));
+        } else {
+            System.out.println("null");
+        }
+//        pizzas.add(new Pizza("Піца Барбекю", "Соус / Сир Королівський / Салямі / Цибуля / Перець чілі / Кукурудза / \n 35 см, 565 гр.", 110f, true, "http://pizza-if.com/wp-content/uploads/Безіменний.png"));
+//        pizzas.add(new Pizza("Капрічіоза Класік", "Соус / Сир Королівський / Шинка / Печериці / Орегано / Італійські оливки / \n 35 см, 555 гр.", 118f, true, "http://pizza-if.com/wp-content/uploads/Капрічіоза-класссік.png"));
+//        pizzas.add(new Pizza("П’ять сирів", "Соус / Сир Королівський / Сир Моцарелла / Сир Пармезан / Сир Фета / Сир Горгонзола / \n 35 см, 535 гр", 145f, true, "http://pizza-if.com/wp-content/uploads/5-2.png"));
+//        pizzas.add(new Pizza("Піца Ібіца", "Соус / Сир Королівський / Курка / Креветки / Кукурудза / Орегано / Соус Песто / \n 35 см, 580 гр.", 169f, true, "http://pizza-if.com/wp-content/uploads/5-3.png"));
+        if (drinkBean != null) {
+            drinks = drinkBean.getAllDrink();
+        } else {
+            System.out.println("null");
+        }
+//        drinks.add(new Drink("Мохіто (Власного приготування)", 17f, true, "http://pizza-if.com/wp-content/uploads/0022_mojito-png.png", 0.5f));
+//        drinks.add(new Drink("Сік яблучний", 23f, true, "http://pizza-if.com/wp-content/uploads/Без-имени-1-1.png", 0.3f));
+//        drinks.add(new Drink("Pepsi", 21f, true, "http://pizza-if.com/wp-content/uploads/44444.png", 1f));
+//        drinks.add(new Drink("Sandora ананасовий сік", 35, true, "http://pizza-if.com/wp-content/uploads/0005.png", 1f));
     }
 
 
@@ -232,16 +251,16 @@ public class PizzaBot extends TelegramLongPollingBot {
 
                         switch (data[3]) {
                             case PIZZA_TAG:
-                                if(index<0){
-                                    index = pizzas.size()-1;
+                                if (index < 0) {
+                                    index = pizzas.size() - 1;
                                 }
                                 Pizza p1 = this.pizzas.get(index);
                                 editMarkup.setText(p1.getName() + "\n" + p1.getDescription() + "\n" + p1.getPhoto());
                                 editMarkup.setReplyMarkup(markup);
                                 break;
                             case DRINK_TAG:
-                                if(index<0){
-                                    index = drinks.size()-1;
+                                if (index < 0) {
+                                    index = drinks.size() - 1;
                                 }
                                 Drink d1 = this.drinks.get(index);
                                 editMarkup.setText(d1.getName() + "\n" + d1.getVolume() + " л \n" + d1.getPhoto());
@@ -272,7 +291,7 @@ public class PizzaBot extends TelegramLongPollingBot {
                                     index = 0;
                                 }
                                 Drink d1 = this.drinks.get(index);
-                                editMarkup.setText(d1.getName() + "\n" +    d1.getVolume() + " л\n" + d1.getPhoto());
+                                editMarkup.setText(d1.getName() + "\n" + d1.getVolume() + " л\n" + d1.getPhoto());
                                 editMarkup.setReplyMarkup(markup);
                                 break;
                         }
@@ -471,7 +490,7 @@ public class PizzaBot extends TelegramLongPollingBot {
                 for (int i = 0; i < this.pizzas.size(); i++) {
                     Drink d = this.drinks.get(i);
                     List<InlineKeyboardButton> row_item = new ArrayList<>();
-                    row_item.add(new InlineKeyboardButton().setText(d.getName() + " | " + d.getPrice() + "("+d.getVolume()+"л)").setCallbackData(DRINK_TAG + ":" + i));
+                    row_item.add(new InlineKeyboardButton().setText(d.getName() + " | " + d.getPrice() + "(" + d.getVolume() + "л)").setCallbackData(DRINK_TAG + ":" + i));
                     rowsInline.add(row_item);
                 }
                 break;
@@ -492,19 +511,19 @@ public class PizzaBot extends TelegramLongPollingBot {
 		 */
         int size = -1;
 
-        switch (type){
+        switch (type) {
             case PIZZA_TAG:
-                size = this.pizzas.size()-1;
+                size = this.pizzas.size() - 1;
                 break;
             case DRINK_TAG:
-                size = this.drinks.size()-1;
+                size = this.drinks.size() - 1;
                 break;
             case SUSHI_TAG:
 //                index
                 break;
         }
 
-        if(action != -2) {
+        if (action != -2) {
             if (action == 1 && index > 0) {
                 index--;
             } else if ((action == 1 && index <= 0)) {
@@ -521,12 +540,12 @@ public class PizzaBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
 
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        switch (type){
+        switch (type) {
             case PIZZA_TAG:
                 rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.pizzas.get(index).getPrice()).setCallbackData(ITEM_TAG + ":"));
                 break;
             case DRINK_TAG:
-                rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.drinks.get(index).getPrice()+"("+this.drinks.get(index).getVolume()+"л)").setCallbackData(ITEM_TAG+":"));
+                rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.drinks.get(index).getPrice() + "(" + this.drinks.get(index).getVolume() + "л)").setCallbackData(ITEM_TAG + ":"));
                 break;
         }
 
@@ -568,4 +587,19 @@ public class PizzaBot extends TelegramLongPollingBot {
         return markup;
     }
 
+    public List<Pizza> getPizzas() {
+        return pizzas;
+    }
+
+    public void setPizzas(List<Pizza> pizzas) {
+        this.pizzas = pizzas;
+    }
+
+    public List<Drink> getDrinks() {
+        return drinks;
+    }
+
+    public void setDrinks(List<Drink> drinks) {
+        this.drinks = drinks;
+    }
 }

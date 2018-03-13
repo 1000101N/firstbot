@@ -6,7 +6,7 @@ import javax.persistence.NamedQuery;
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "geAllDrink", query = "SELECT d from Drink d")
+        @NamedQuery(name = "getAllDrink", query = "SELECT d from Drink d")
 })
 public class Drink extends Item {
 
