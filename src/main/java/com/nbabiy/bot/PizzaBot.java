@@ -1,11 +1,6 @@
 package com.nbabiy.bot;
 
-import com.nbabiy.BotConfig;
-import com.nbabiy.domain.CategoryOfFood;
-import com.nbabiy.domain.Item;
-import com.nbabiy.domain.Order;
-import com.nbabiy.domain.Pizza;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+import com.nbabiy.domain.*;
 import org.telegram.telegrambots.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
@@ -23,16 +18,19 @@ import java.util.*;
 public class PizzaBot extends TelegramLongPollingBot {
 
     private ArrayList<Pizza> pizzas;
+    private ArrayList<Drink> drinks;
+
+    private boolean order_menu = false;
 
 
     final private String GREETING = "Вас вітає VINTAGE_PIZZA_BOT";
     final private String MAIN_MENU = "Головне меню";
 
     final private String NEW_ORDER = "Нове замовлення";
-    final private String CATEGORY = "Категорії";
-    final private String PIZZA_C = "Піцци";
-    final private String DRINK_C = "Напої";
-    final private String SUSHI_C = "Суші";
+    final private String CATEGORY = ".             Категорії               .";
+    final private String PIZZA_C = ".               Піцци              .";
+    final private String DRINK_C = ".               Напої             .";
+    final private String SUSHI_C = ".               Суші                .";
 
     final private String ALL_LIST = "Список";
 
@@ -58,7 +56,9 @@ public class PizzaBot extends TelegramLongPollingBot {
     final private String PIZZA_TAG = "pizza";
     final private String DRINK_TAG = "drink";
     final private String SUSHI_TAG = "sushi";
+
     final private String CART_TAG = "cart";
+
     final private String BACK_TAG = "back";
     final private String NEXT_TAG = "next";
     final private String ITEM_TAG = "item";
@@ -80,6 +80,12 @@ public class PizzaBot extends TelegramLongPollingBot {
         pizzas.add(new Pizza("П’ять сирів", "Соус / Сир Королівський / Сир Моцарелла / Сир Пармезан / Сир Фета / Сир Горгонзола / \n 35 см, 535 гр", 145f, true, "http://pizza-if.com/wp-content/uploads/5-2.png"));
         pizzas.add(new Pizza("Піца Ібіца", "Соус / Сир Королівський / Курка / Креветки / Кукурудза / Орегано / Соус Песто / \n 35 см, 580 гр.", 169f, true, "http://pizza-if.com/wp-content/uploads/5-3.png"));
 
+        drinks = new ArrayList<>();
+
+        drinks.add(new Drink("Мохіто (Власного приготування)", 17f, true, "http://pizza-if.com/wp-content/uploads/0022_mojito-png.png", 0.5f));
+        drinks.add(new Drink("Сік яблучний", 23f, true, "http://pizza-if.com/wp-content/uploads/Без-имени-1-1.png", 0.3f));
+        drinks.add(new Drink("Pepsi", 21f, true, "http://pizza-if.com/wp-content/uploads/44444.png", 1f));
+        drinks.add(new Drink("Sandora ананасовий сік", 35, true, "http://pizza-if.com/wp-content/uploads/0005.png", 1f));
     }
 
 
@@ -127,7 +133,7 @@ public class PizzaBot extends TelegramLongPollingBot {
             EditMessageText editMarkup = new EditMessageText();
             editMarkup.setChatId(callbackquery.getMessage().getChatId().toString());
             editMarkup.setInlineMessageId(callbackquery.getInlineMessageId());
-            editMarkup.enableMarkdown(true);
+//            editMarkup.enableMarkdown(true);
             editMarkup.setMessageId(callbackquery.getMessage().getMessageId());
 
             boolean getOrder = false;
@@ -164,6 +170,14 @@ public class PizzaBot extends TelegramLongPollingBot {
                             }
                             break;
                         case DRINK_TAG:
+                            markup = this.getCategoryItems(CategoryOfFood.DRINK);
+                            editMarkup.setText(DRINK_C);
+                            editMarkup.setReplyMarkup(markup);
+                            try {
+                                execute(editMarkup);
+                            } catch (TelegramApiException e) {
+                                e.printStackTrace();
+                            }
                             break;
                         case SUSHI_TAG:
                             break;
@@ -182,12 +196,23 @@ public class PizzaBot extends TelegramLongPollingBot {
                     }
                     break;
                 case PIZZA_TAG:
-
-
-
-                    markup = this.getGalleryView(Integer.parseInt(data[1]), -1, 0);
+                    System.out.println("ind" + Integer.parseInt(data[1]));
+                    markup = this.getGalleryView(Integer.parseInt(data[1]), -2, 0, PIZZA_TAG);
                     Pizza p = this.pizzas.get(Integer.parseInt(data[1]));
-                    editMarkup.setText(p.getName() + "\n" + p.getDescription()+"\n"+p.getPhoto());
+                    editMarkup.setText(p.getName() + "\n" + p.getDescription() + "\n" + p.getPhoto());
+                    editMarkup.setReplyMarkup(markup);
+                    try {
+                        execute(editMarkup);
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case DRINK_TAG:
+                    System.out.println("ind" + Integer.parseInt(data[1]));
+                    markup = this.getGalleryView(Integer.parseInt(data[1]), -2, 0, DRINK_TAG);
+                    Drink d = this.drinks.get(Integer.parseInt(data[1]));
+                    editMarkup.setText(d.getName() + "\n" + d.getVolume() + "\n" + d.getPhoto());
                     editMarkup.setReplyMarkup(markup);
                     try {
                         execute(editMarkup);
@@ -200,35 +225,81 @@ public class PizzaBot extends TelegramLongPollingBot {
                     int index = Integer.parseInt(data[2]);
 
                     if (data[1].equals(BACK_TAG)) {
-                        markup = this.getGalleryView(Integer.parseInt(data[2]), 1, callbackquery.getMessage().getChatId());
-                        if (index > 0) {
+                        markup = this.getGalleryView(Integer.parseInt(data[2]), 1, callbackquery.getMessage().getChatId(), data[3]);
+                        if (index >= 0) {
                             index--;
                         }
-                        Pizza p1 = this.pizzas.get(Integer.parseInt(data[2]));
-                        editMarkup.setText(p1.getName() + "\n" + p1.getDescription()+"\n"+p1.getPhoto());
-                        editMarkup.setReplyMarkup(markup);
-                        try {
-                            execute(editMarkup);
-                        } catch (TelegramApiException e) {
-                            e.printStackTrace();
+
+                        switch (data[3]) {
+                            case PIZZA_TAG:
+                                if(index<0){
+                                    index = pizzas.size()-1;
+                                }
+                                Pizza p1 = this.pizzas.get(index);
+                                editMarkup.setText(p1.getName() + "\n" + p1.getDescription() + "\n" + p1.getPhoto());
+                                editMarkup.setReplyMarkup(markup);
+                                break;
+                            case DRINK_TAG:
+                                if(index<0){
+                                    index = drinks.size()-1;
+                                }
+                                Drink d1 = this.drinks.get(index);
+                                editMarkup.setText(d1.getName() + "\n" + d1.getVolume() + " л \n" + d1.getPhoto());
+                                editMarkup.setReplyMarkup(markup);
+                                break;
                         }
+
                     } else if (data[1].equals(NEXT_TAG)) {
-                        markup = this.getGalleryView(Integer.parseInt(data[2]), 2, callbackquery.getMessage().getChatId());
-                        if (index < this.pizzas.size() - 1) {
-                            index++;
+                        markup = this.getGalleryView(Integer.parseInt(data[2]), 2, callbackquery.getMessage().getChatId(), data[3]);
+
+                        switch (data[3]) {
+                            case PIZZA_TAG:
+                                if (index <= this.pizzas.size() - 1) {
+                                    index++;
+                                }
+                                if (index > this.pizzas.size() - 1) {
+                                    index = 0;
+                                }
+                                Pizza p1 = this.pizzas.get(index);
+                                editMarkup.setText(p1.getName() + "\n" + p1.getDescription() + "\n" + p1.getPhoto());
+                                editMarkup.setReplyMarkup(markup);
+                                break;
+                            case DRINK_TAG:
+                                if (index <= this.drinks.size() - 1) {
+                                    index++;
+                                }
+                                if (index > this.drinks.size() - 1) {
+                                    index = 0;
+                                }
+                                Drink d1 = this.drinks.get(index);
+                                editMarkup.setText(d1.getName() + "\n" +    d1.getVolume() + " л\n" + d1.getPhoto());
+                                editMarkup.setReplyMarkup(markup);
+                                break;
                         }
-                        Pizza p1 = this.pizzas.get(Integer.parseInt(data[2]));
-                        editMarkup.setText(p1.getName() + "\n" + p1.getDescription()+"\n"+p1.getPhoto());
-                        editMarkup.setReplyMarkup(markup);
+
+                    } else if (data[1].equals(ALL_LIST_TAG)) {
+                        switch (data[3]) {
+                            case PIZZA_TAG:
+                                markup = this.getCategoryItems(CategoryOfFood.PIZZA);
+                                editMarkup.setText(PIZZA_C);
+                                editMarkup.setReplyMarkup(markup);
+                                break;
+                            case DRINK_TAG:
+                                markup = this.getCategoryItems(CategoryOfFood.DRINK);
+                                editMarkup.setText(DRINK_C);
+                                editMarkup.setReplyMarkup(markup);
+                        }
+
+                    }
+
+                    if (markup == null) {
                         try {
-                            execute(editMarkup);
+                            this.sendAnswerCallbackQuery(INDEX_OUT_OF_RANGE, false, callbackquery);
                         } catch (TelegramApiException e) {
                             e.printStackTrace();
                         }
-                    } else if (data[1].equals(ALL_LIST_TAG)) {
-                        markup = this.getCategoryItems(CategoryOfFood.PIZZA);
-                        editMarkup.setText(PIZZA_C);
-                        editMarkup.setReplyMarkup(markup);
+                    } else {
+
                         try {
                             execute(editMarkup);
                         } catch (TelegramApiException e) {
@@ -357,8 +428,8 @@ public class PizzaBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row2 = new ArrayList<>();
         row2.add(new InlineKeyboardButton().setText(DRINK_C).setCallbackData(CATEGORY_TAG + ":" + DRINK_TAG));
 
-        List<InlineKeyboardButton> row3 = new ArrayList<>();
-        row3.add(new InlineKeyboardButton().setText(SUSHI_C).setCallbackData(CATEGORY_TAG + ":" + SUSHI_TAG));
+//        List<InlineKeyboardButton> row3 = new ArrayList<>();
+//        row3.add(new InlineKeyboardButton().setText(SUSHI_C).setCallbackData(CATEGORY_TAG + ":" + SUSHI_TAG));
 
         List<InlineKeyboardButton> row4 = new ArrayList<>();
         row4.add(new InlineKeyboardButton().setText(CART).setCallbackData(CATEGORY_TAG + ":" + CART_TAG));
@@ -368,7 +439,7 @@ public class PizzaBot extends TelegramLongPollingBot {
 
         rowsInline.add(row1);
         rowsInline.add(row2);
-        rowsInline.add(row3);
+//        rowsInline.add(row3);
         rowsInline.add(row4);
         rowsInline.add(row5);
 
@@ -397,6 +468,12 @@ public class PizzaBot extends TelegramLongPollingBot {
                 }
                 break;
             case DRINK:
+                for (int i = 0; i < this.pizzas.size(); i++) {
+                    Drink d = this.drinks.get(i);
+                    List<InlineKeyboardButton> row_item = new ArrayList<>();
+                    row_item.add(new InlineKeyboardButton().setText(d.getName() + " | " + d.getPrice() + "("+d.getVolume()+"л)").setCallbackData(DRINK_TAG + ":" + i));
+                    rowsInline.add(row_item);
+                }
                 break;
             case SUSHI:
                 break;
@@ -407,21 +484,36 @@ public class PizzaBot extends TelegramLongPollingBot {
         return itemsMarkup;
     }
 
-    private InlineKeyboardMarkup getGalleryView(int index, int action, long chatId) {
+    private InlineKeyboardMarkup getGalleryView(int index, int action, long chatId, String type) {
         /*
          * action = 1 -> back
 		 * action = 2 -> next
 		 * action = -1 -> nothing
 		 */
+        int size = -1;
 
-        if (action == 1 && index > 0) {
-            index--;
-        } else if ((action == 1 && index == 0)) {
-            return null;
-        } else if (action == 2 && index >= this.pizzas.size() - 1) {
-            return null;
-        } else if (action == 2) {
-            index++;
+        switch (type){
+            case PIZZA_TAG:
+                size = this.pizzas.size()-1;
+                break;
+            case DRINK_TAG:
+                size = this.drinks.size()-1;
+                break;
+            case SUSHI_TAG:
+//                index
+                break;
+        }
+
+        if(action != -2) {
+            if (action == 1 && index > 0) {
+                index--;
+            } else if ((action == 1 && index <= 0)) {
+                index = size;
+            } else if (action == 2 && index > size - 1) {
+                index = 0;
+            } else if (action == 2) {
+                index++;
+            }
         }
 
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
@@ -429,22 +521,30 @@ public class PizzaBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
 
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.pizzas.get(index).getPrice()).setCallbackData(ITEM_TAG + ":"));
+        switch (type){
+            case PIZZA_TAG:
+                rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.pizzas.get(index).getPrice()).setCallbackData(ITEM_TAG + ":"));
+                break;
+            case DRINK_TAG:
+                rowInline.add(new InlineKeyboardButton().setText("Додати - " + this.drinks.get(index).getPrice()+"("+this.drinks.get(index).getVolume()+"л)").setCallbackData(ITEM_TAG+":"));
+                break;
+        }
 
 
         List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
-        rowInline2.add(new InlineKeyboardButton().setText(BACK).setCallbackData(ITEM_TAG + ":" + BACK_TAG + ":" + index));
-        rowInline2.add(new InlineKeyboardButton().setText(NEXT).setCallbackData(ITEM_TAG + ":" + NEXT_TAG + ":" + index));
+        rowInline2.add(new InlineKeyboardButton().setText(BACK).setCallbackData(ITEM_TAG + ":" + BACK_TAG + ":" + index + ":" + type));
+        rowInline2.add(new InlineKeyboardButton().setText(NEXT).setCallbackData(ITEM_TAG + ":" + NEXT_TAG + ":" + index + ":" + type));
 
         List<InlineKeyboardButton> rowInline3 = new ArrayList<>();
-        rowInline3.add(new InlineKeyboardButton().setText("Кошик").setCallbackData(ITEM_TAG + ":" + CART_TAG+":"+-1));
+        rowInline3.add(new InlineKeyboardButton().setText(CART).setCallbackData(ITEM_TAG + ":" + CART_TAG + ":" + -2 + ":" + type));
 
         List<InlineKeyboardButton> rowInline4 = new ArrayList<>();
-        rowInline3.add(new InlineKeyboardButton().setText(ALL_LIST).setCallbackData(ITEM_TAG + ":" + ALL_LIST_TAG+":"+-1));
+        rowInline4.add(new InlineKeyboardButton().setText(ALL_LIST).setCallbackData(ITEM_TAG + ":" + ALL_LIST_TAG + ":" + -2 + ":" + type));
 
         rowsInline.add(rowInline);
         rowsInline.add(rowInline2);
         rowsInline.add(rowInline3);
+        rowsInline.add(rowInline4);
 
         markupInline.setKeyboard(rowsInline);
 

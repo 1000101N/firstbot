@@ -1,6 +1,6 @@
 //package com.nbabiy.bot;
 //
-//import com.nbabiy.BotConfig;
+//import com.nbabiy.bot.BotConfig;
 //import org.telegram.telegrambots.api.methods.AnswerCallbackQuery;
 //import org.telegram.telegrambots.api.methods.send.SendMessage;
 //import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;

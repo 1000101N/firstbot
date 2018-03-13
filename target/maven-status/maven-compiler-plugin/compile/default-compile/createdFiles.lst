@@ -1,0 +1,15 @@
+com\nbabiy\rest\ApplicationConfig.class
+com\nbabiy\db\DBProducer.class
+com\nbabiy\domain\Pizza.class
+com\nbabiy\rest\BotBean.class
+com\nbabiy\bot\BotConfig.class
+com\nbabiy\bot\BotEcho.class
+com\nbabiy\domain\Order.class
+com\nbabiy\bot\PizzaBot$1.class
+com\nbabiy\bot\BotData.class
+com\nbabiy\domain\Drink.class
+com\nbabiy\bot\PizzaBot.class
+com\nbabiy\bot\BotProducer.class
+com\nbabiy\domain\Item.class
+com\nbabiy\Main.class
+com\nbabiy\domain\CategoryOfFood.class

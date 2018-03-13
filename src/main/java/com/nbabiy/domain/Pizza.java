@@ -1,5 +1,11 @@
 package com.nbabiy.domain;
 
+import javax.persistence.*;
+
+@Entity
+@NamedQueries({
+        @NamedQuery(name = "getAllPizza", query = "select p from  Pizza p")
+})
 public class Pizza extends Item{
 
     private String description;
@@ -41,6 +47,6 @@ public class Pizza extends Item{
         return "Pizza{" +
                 "description='" + description + '\'' +
                 ", price=" + price +
-                '}';
+                "} " + super.toString();
     }
 }

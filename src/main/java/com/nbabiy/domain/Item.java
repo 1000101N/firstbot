@@ -1,8 +1,15 @@
 package com.nbabiy.domain;
 
+import javax.persistence.*;
+
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Item {
 
+    @Id
+    @GeneratedValue
     private int id;
+
     private String name;
     private float price;
     private boolean avaliable;
